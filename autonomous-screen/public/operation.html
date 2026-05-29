@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autonomous Operation</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 12px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+}
+
+.container {
+  display: flex;
+  height: calc(90vh - 60px);
+  gap: 10px;
+  padding: 10px;
+}
+
+.map-container {
+  display: flex;
+  flex-direction: column;
+  height: 92vh;
+  width: 89%;
+}
+
+.map-box {
+  flex: 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+.panel {
+  width: 250px;
+}
+
+
+.card {
+  background: radial-gradient(circle at top, #2a2a2a, #1a1a1a);
+
+  border-radius: 15px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.label {
+  margin-top: -30px;
+  font-size: 14px;
+}
+
+.value {
+  font-size: 18px;
+}
+
+
+.footer {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+}
+
+.start, .start-operation { background: #00cfd1; color: black; }
+.stop, .save, .cancel, .stop-operation {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+
+
+    .gauge {
+      position: relative;
+      width: 250px;
+      height: 220px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .speedometer {
+      height: 200px;
+    }
+
+    .speedometer-ring {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #1a2a2a, #0d1515);
+      box-shadow: 
+        0 0 30px rgba(0, 200, 200, 0.15),
+        inset 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .speedometer-inner {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #1a2525, #0a1212);
+      box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .speedometer-center {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #2a3a3a, #1a2525);
+      box-shadow: 
+        0 0 15px rgba(0, 200, 200, 0.2),
+        inset 0 2px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .needle-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #00d4d4;
+      box-shadow: 0 0 10px rgba(0, 212, 212, 0.8);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .needle-dot.active {
+      box-shadow: 0 0 20px rgba(0, 212, 212, 1);
+    }
+
+    .speedometer-ticks {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+    }
+
+    .needle {
+      position: absolute;
+      width: 70px;
+      height: 3px;
+      background: linear-gradient(90deg, white, rgba(255,255,255,0.3));
+
+      transform: rotate(-30deg) translateX(-35px);
+      border-radius: 2px;
+      filter: drop-shadow(0 0 3px rgba(255,255,255,0.5));
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .speed-display {
+      position: absolute;
+      bottom: 30px;
+      text-align: center;
+      color: white;
+    }
+
+    .speed-value {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      transition: color 0.3s ease;
+    }
+
+    .speed-value.highlight {
+      color: #00d4d4;
+    }
+
+    .speed-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+  
+    .compass {
+      position: relative;
+    }
+
+    .compass-ring {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #1a2a2a, #0d1515);
+      box-shadow: 
+        0 0 30px rgba(0, 200, 200, 0.15),
+        inset 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .compass-inner {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #1a2525, #0a1212);
+      box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .compass-ticks-container {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .compass-center {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #2a3a3a, #1a2525);
+      box-shadow: 
+        0 0 15px rgba(0, 200, 200, 0.2),
+        inset 0 2px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .compass-degree {
+      font-size: 28px;
+      font-weight: 600;
+      color: #00d4d4;
+      transition: transform 0.2s ease;
+    }
+
+    .compass-degree.pulse {
+      transform: scale(1.1);
+    }
+
+    .compass-direction {
+      font-size: 12px;
+      color: #888;
+      margin-top: -2px;
+      text-transform: uppercase;
+      transition: color 0.3s ease;
+    }
+
+    .compass-indicator {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #00d4d4;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0, 212, 212, 0.8);
+      bottom: 170px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .compass-indicator.active {
+      box-shadow: 0 0 20px rgba(0, 212, 212, 1), 0 0 30px rgba(0, 212, 212, 0.5);
+    }
+
+    .cardinal {
+      position: absolute;
+      font-size: 18px;
+      font-weight: 500;
+      color: #888;
+      transition: color 0.3s ease, transform 0.3s ease;
+      z-index: 15;
+    }
+
+    .cardinal.active {
+      color: #00d4d4;
+      transform: scale(1.2);
+    }
+
+    .cardinal.n { top: -30px; left: 50%; transform: translateX(-50%); }
+    .cardinal.n.active { transform: translateX(-50%) scale(1.2); }
+    .cardinal.s { bottom: -30px; left: 50%; transform: translateX(-50%); }
+    .cardinal.s.active { transform: translateX(-50%) scale(1.2); }
+    .cardinal.e { right: -25px; top: 50%; transform: translateY(-50%); }
+    .cardinal.e.active { transform: translateY(-50%) scale(1.2); }
+    .cardinal.w { left: -25px; top: 50%; transform: translateY(-50%); }
+    .cardinal.w.active { transform: translateY(-50%) scale(1.2); }
+
+    .compass-ticks {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+    }
+
+    .tick-label {
+      fill: #666;
+      font-size: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .tick {
+      stroke: #3a4a4a;
+      stroke-width: 2;
+    }
+
+    .tick-major {
+      stroke: #4a5a5a;
+      stroke-width: 2;
+    }
+    .btn-start {
+      background: #00cfd1;
+      color: white;
+      padding: 5px;
+      border-radius: 5px;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #goBackButton {
+      all: unset;
+    }
+
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.telemetry-card {
+
+  color: white;
+}
+
+.telemetry-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  font-size: 14px;
+}
+
+.telemetry-item span:last-child {
+  color: #00d4d4;
+  font-weight: bold;
+}
+
+
+.custom-alert {
+  display: none;
+
+  position: fixed;
+  z-index: 5000;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.7);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.alert-box {
+  width: 90%;
+  max-width: 380px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 14px;
+
+  padding: 30px 25px;
+
+  text-align: center;
+
+  animation: popupAnim 0.25s ease;
+}
+
+@keyframes popupAnim {
+
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+
+
+.alert-icon {
+  width: 70px;
+  height: 70px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 34px;
+  font-weight: bold;
+
+  background: #00cfd1;
+  color: white;
+}
+
+#alertTitle {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+#alertMessage {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.alert-btn {
+  border: none;
+  background: #00cfd1;
+
+  color: white;
+
+  padding: 12px 30px;
+
+  border-radius: 6px;
+
+  font-size: 16px;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.alert-btn:hover {
+   background: #00b5b7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+
+  <span style="font-weight: bold; font-size: 22px;">
+    Autonomous Operation
+  </span>
+
+   <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+
+<div class="container">
+<div class="map-container">
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+
+  <div class="footer">
+    <button id="TrackingBtn" class="btn-start" onclick="toggleTracking()">Start Tracking</button>
+    <button id="OperationBtn" class="btn-start" onclick="toggleOperation()">Start Operation</button>
+  </div>
+</div>
+
+
+  <div class="panel">
+
+    <div class="gauge speedometer">
+      <div class="speedometer-ring"></div>
+      <svg class="speedometer-ticks" viewBox="0 0 240 240">
+<g transform="translate(120, 120)">
+
+       <g transform="rotate(150) translate(77,-1)">
+    <text class="tick-label" transform="rotate(-150)" text-anchor="middle">0</text>
+    </g>
+
+  <g transform="rotate(190) translate(79,-1)">
+    <text class="tick-label" transform="rotate(-190)" text-anchor="middle">10</text>
+    </g>
+
+    <g transform="rotate(230) translate(77,-3)">
+    <text class="tick-label" transform="rotate(-230)" text-anchor="middle">20</text>
+    </g>
+
+  <g transform="rotate(270) translate(77,-1)">
+    <text class="tick-label" transform="rotate(-270)" text-anchor="middle">30</text>
+    </g>
+
+    <g transform="rotate(310) translate(77,0)">
+    <text class="tick-label" transform="rotate(-310)" text-anchor="middle">40</text>
+    </g>
+
+     <g transform="rotate(350) translate(77,3)">
+    <text class="tick-label" transform="rotate(-350)" text-anchor="middle">50</text>
+    </g>
+     <g transform="rotate(390) translate(80,1)">
+    <text class="tick-label" transform="rotate(-390)" text-anchor="middle">60</text>
+    </g>
+
+
+</g>
+      </svg>
+      <div class="speedometer-inner"></div>
+      <div class="needle" id="needle"></div>
+      <div class="speedometer-center">
+        <div class="needle-dot" id="needleDot"></div>
+      </div>
+      <div class="speed-display">
+        <div class="speed-value" id="speedValue">0.00 Km/h</div>
+        <div class="speed-label">Speed</div>
+      </div>
+    </div>
+
+    <div class="gauge compass">
+
+      <div class="compass-ring"></div>
+      <div class="compass-ticks-container" id="compassTicks">
+        <svg class="compass-ticks" viewBox="0 0 340 340">
+          <g transform="translate(170, 170)">
+
+         <text style="fill: red; font-weight: bold;" transform="rotate(0) translate(0, -115)" text-anchor="middle">N</text>
+          <text class="tick-label" transform="rotate(0) translate(0, -100)" text-anchor="middle">0°</text>
+
+          <text class="tick-label" transform="rotate(30) translate(0, -100)" text-anchor="middle">30°</text>
+          <text class="tick-label" transform="rotate(60) translate(0, -100)" text-anchor="middle">60°</text>
+
+          <text style="fill: red; font-weight: bold;" transform="rotate(90) translate(0, -115)" text-anchor="middle">E</text>
+          <text class="tick-label" transform="rotate(90) translate(0, -100)" text-anchor="middle">90°</text>
+
+          <text class="tick-label" transform="rotate(120) translate(0, -100)" text-anchor="middle">120°</text>
+          <text class="tick-label" transform="rotate(150) translate(0, -100)" text-anchor="middle">150°</text>
+
+          <text style="fill: red; font-weight: bold;" transform="rotate(180) translate(0, -115)" text-anchor="middle">S</text>
+          <text class="tick-label" transform="rotate(180) translate(0, -100)" text-anchor="middle">180°</text>
+
+          <text class="tick-label" transform="rotate(210) translate(0, -100)" text-anchor="middle">210°</text>
+          <text class="tick-label" transform="rotate(240) translate(0, -100)" text-anchor="middle">240°</text>
+
+          <text style="fill: red; font-weight: bold;" transform="rotate(270) translate(0, -115)" text-anchor="middle">W</text>
+          <text class="tick-label" transform="rotate(270) translate(0, -100)" text-anchor="middle">270°</text>
+
+          <text class="tick-label" transform="rotate(300) translate(0, -100)" text-anchor="middle">300°</text>
+          <text class="tick-label" transform="rotate(330) translate(0, -100)" text-anchor="middle">330°</text>
+          </g>
+        </svg>
+      </div>
+      <div class="compass-inner"></div>
+      <div class="compass-indicator" id="compassIndicator"></div>
+      <div class="compass-center">
+        <div class="compass-degree" id="compassDegree">0°</div>
+        <div class="compass-direction" id="compassDirection">N</div>
+      </div>
+    </div>
+
+<div class="card telemetry-card">
+  
+  <div class="telemetry-item">
+    <span>Time</span>
+    <span id="timeValue">0</span>
+  </div>
+
+  <div class="telemetry-item">
+      <span>latitude</span>
+      <span id="latValue">0</span>
+    </div>
+
+    <div class="telemetry-item">
+      <span>longitude</span>
+      <span id="longValue">0</span>
+    </div>
+
+
+    <!-- <div class="telemetry-item">
+      <span>Altitude</span>
+      <span id="altitudeValue">0</span>
+    </div> -->
+
+    <!-- <div class="telemetry-item">
+      <span>Speed</span>
+      <span id="speedTextValue">0</span>
+    </div>
+
+    <div class="telemetry-item">
+      <span>Heading</span>
+      <span id="headingValue">0</span>
+    </div> -->
+
+    <!-- <div class="telemetry-item">
+      <span>HDOP</span>
+      <span id="hdopValue">0</span>
+    </div> -->
+
+    <div class="telemetry-item">
+      <span>Quality</span>
+      <span id="qualityValue">0</span>
+    </div>
+
+    <div class="telemetry-item">
+      <span>Satellite</span>
+      <span id="satelliteValue">0</span>
+    </div>
+
+    <div class="telemetry-item">
+      <span>Age</span>
+      <span id="ageValue">0</span>
+    </div>
+
+    <!-- <div class="telemetry-item">
+      <span>NTRIP</span>
+      <span id="ntripValue">0</span>
+    </div> -->
+
+  </div>
+
+  </div>
+
+</div>
+
+<!-- ================= ALERT POPUP ================= -->
+
+<div class="custom-alert" id="alertPopup">
+
+  <div class="alert-box">
+
+    <div class="alert-icon" id="alertIcon">
+      !
+    </div>
+
+    <h2 id="alertTitle">
+      Alert
+    </h2>
+
+    <p id="alertMessage">
+      Message here
+    </p>
+
+    <button class="alert-btn" onclick="closeAlert()">
+      OK
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+function showAlert(title, message) {
+
+  document.getElementById("alertTitle").innerText = title;
+
+  document.getElementById("alertMessage").innerText = message;
+
+  document.getElementById("alertPopup").style.display = "flex";
+}
+
+function closeAlert() {
+  document.getElementById("alertPopup").style.display = "none";
+}
+
+/* Close when clicking outside popup */
+
+document.getElementById("alertPopup").addEventListener("click", function(e) {
+
+  if (e.target.id === "alertPopup") {
+    closeAlert();
+  }
+
+});
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  console.log("Operation ID:", id);
+
+  fetch(`./data/path.json`)
+    .then(res => res.json())
+    .then(data => {
+      const findItem = data.find(item => String(item.id) === id);
+
+      if (findItem) {
+        console.log("Found Path Data:", findItem);
+        const cords = findItem.pathPlan.farm_boundary;
+        const headland = findItem.pathPlan.headland;
+        console.log(findItem)
+        const line = findItem?.pathPlan?.path_points
+        const marker = findItem?.pathPlan?.path_points[0]
+        drawFarmOnMap(cords, headland);
+        drawPolyline(line, marker)
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching path data:", err);
+            showAlert(
+  "Failed to load path data.",
+  "Please try again."
+);
+    });
+
+   fetch(`/api/updatePathPlan/${id}`, {
+    method: 'POST',
+   }) 
+
+let farmLayer = null;
+let polyline1 = null;
+let headlandLayer = null;
+
+function drawPolyline(line, marker){
+  if(polyline1){
+    map.removeLayer(polyline1)
+  }
+
+    const tractorIcon = L.icon({
+    iconUrl: './image/blue.svg',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+
+  let vehicleMarker = L.marker(marker, {
+    icon: tractorIcon
+  }).addTo(map);
+
+  polyline1 = L.polyline(line, {color:"#00cfd1"}).addTo(map)
+}
+
+function drawFarmOnMap(coords, headland) {
+
+  if (farmLayer) {
+    map.removeLayer(farmLayer);
+  }
+  if (headlandLayer) {
+    map.removeLayer(headlandLayer);
+  }
+
+  farmLayer = L.polygon(coords, {
+    color: "lime",
+    fillColor: "green",
+    fillOpacity: 0.3
+  }).addTo(map);
+
+
+  headlandLayer = L.polygon(headland, {
+    color: "yellow",
+    fillColor: "orange",
+    fillOpacity: 0.3
+  }).addTo(map);
+
+  map.fitBounds(farmLayer.getBounds());
+}
+
+  let pathCoords = [];
+  const ws = new WebSocket(`ws://${window.location.hostname}:5000`);
+
+ws.onopen = () => {
+  console.log('Connected to server');
+};
+
+ws.onmessage = (event) => {
+  console.log(event.data);
+
+  const newData = event.data.split(" ");
+  const time = newData[0];
+  const lat = parseFloat(newData[1]);
+  const lng = parseFloat(newData[2]);
+  const altitude = parseFloat(newData[3]);
+  const speed = parseFloat(newData[4]);
+  const heading = parseFloat(newData[5]);
+  const hdop = parseFloat(newData[6]);
+  const quality = parseInt(newData[7]);
+  const satellite = parseInt(newData[8]);
+  const age = parseFloat(newData[9]);
+  const ntrip = parseInt(newData[11]);
+
+  if (!lat || !lng) return;
+
+  const newPoint = [lat, lng];
+
+  pathCoords.push(newPoint);
+
+  polyline.setLatLngs(pathCoords);
+
+ 
+  vehicleMarker.setLatLng(newPoint);
+
+  // const markerElement = vehicleMarker.getElement();
+  // if (markerElement) {
+  //   markerElement.style.transform += ` rotate(${heading}deg)`;
+  // }
+
+  // map.flyTo(newPoint, 22);
+
+      document.getElementById("latValue").textContent =
+  lat;
+
+      document.getElementById("longValue").textContent =
+  lng;
+
+    document.getElementById("timeValue").textContent =
+  time;
+
+  // document.getElementById("altitudeValue").textContent =
+  // altitude.toFixed(2) + " m";
+
+  // document.getElementById("speedTextValue").textContent =
+  //   speed.toFixed(2) + " km/h";
+
+  // document.getElementById("headingValue").textContent =
+  //   heading.toFixed(2) + "°";
+
+  // document.getElementById("hdopValue").textContent =
+  //   hdop.toFixed(2);
+
+  document.getElementById("qualityValue").textContent =
+    quality;
+
+  document.getElementById("satelliteValue").textContent =
+    satellite;
+
+  document.getElementById("ageValue").textContent =
+    age.toFixed(2);
+
+  // document.getElementById("ntripValue").textContent =
+  //   ntrip;
+
+  setSpeed(speed);
+  setHeading(heading);
+};
+
+
+ws.onclose = () => {
+  console.log('Disconnected');
+};
+
+function start() {
+  fetch('/start-stream');
+}
+
+function stop() {
+  fetch('/stop-stream');
+}
+
+function startOperation() {
+  fetch('/run-operation');
+}
+
+function stopOperation() {
+  fetch('/stop-operation');
+}
+
+let map = L.map('map').setView([28.6139, 77.2090], 22);
+
+
+L.tileLayer(
+  'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 22,
+    attribution: 'Google'
+  }
+).addTo(map);
+
+  const tractorIcon = L.icon({
+    iconUrl: './image/tractorLogoNew.png',
+    iconSize: [30, 30],
+    iconAnchor: [16, 28]
+  });
+
+  let vehicleMarker = L.marker([0,0], {
+    icon: tractorIcon
+  }).addTo(map);
+
+const polyline = L.polyline([], {
+  color: '#00ffff',
+  weight: 8
+}).addTo(map);
+
+function goBack() {
+  fetch('/api/stop-operation');
+  window.location.href = "/path";
+}
+
+    const needle = document.getElementById('needle');
+    const needleDot = document.getElementById('needleDot');
+    const speedValue = document.getElementById('speedValue');
+    const compassTicks = document.getElementById('compassTicks');
+    const compassDegree = document.getElementById('compassDegree');
+    const compassDirection = document.getElementById('compassDirection');
+    const compassIndicator = document.getElementById('compassIndicator');
+
+    const cardinals = {
+      n: document.getElementById('cardinalN'),
+      s: document.getElementById('cardinalS'),
+      e: document.getElementById('cardinalE'),
+      w: document.getElementById('cardinalW')
+    };
+
+    let currentSpeed = 0;
+    let currentHeading = 0;
+    let demoInterval = null;
+    let isDemo = false;
+
+    function getDirection(degrees) {
+      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      const index = Math.round(degrees / 45) % 8;
+      return dirs[index];
+    }
+
+
+
+function setSpeed(speed) {
+  currentSpeed = Math.max(0, Math.min(60, speed));
+
+
+  const rotation = -30 + (currentSpeed / 70) * 280;
+
+  needle.style.transform = `rotate(${rotation}deg) translateX(-35px)`;
+  speedValue.textContent = `${currentSpeed.toFixed(2)} Km/h`;
+
+  if (currentSpeed > 40) {
+    speedValue.classList.add('highlight');
+    needleDot.classList.add('active');
+  } else {
+    speedValue.classList.remove('highlight');
+    needleDot.classList.remove('active');
+  }
+}
+
+function setHeading(degrees) {
+  currentHeading = ((degrees % 360) + 360) % 360;
+  compassTicks.style.transform = `rotate(${-currentHeading}deg)`;
+  compassDegree.textContent = `${Math.round(currentHeading)}°`;
+  compassDirection.textContent = getDirection(currentHeading).toLowerCase();
+  compassDegree.classList.add('pulse');
+  setTimeout(() => compassDegree.classList.remove('pulse'), 200);;
+  compassIndicator.classList.add('active');
+  setTimeout(() => compassIndicator.classList.remove('active'), 300);
+}
+
+
+
+setSpeed(0);
+setHeading(0);
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    const btn = document.getElementById("OperationBtn");
+
+    btn.innerText = "Stop Operation";
+    btn.style.background = "#1f1f1f";
+     btn.style.color = "white";
+     btn.style.fontWeight = "bold";
+     btn.style.border = "1px solid #00cfd1";
+    isOPerationRunning = true;
+
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log("in")
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    console.log(gnssStatus)
+    isRunning = false;
+    fetch('/stop-stream')  
+        .then(() => {
+          console.log("in1")
+          const btn = document.getElementById("TrackingBtn");
+          btn.innerText = "Start Tracking";
+          btn.style.background = "#00cfd1";
+          btn.style.fontWeight = "bold";
+          isRunning = false;
+        })
+        .catch(err => console.error(err));
+
+  }
+})
+.catch(err => console.error(err));
+
+fetch('/check-streem')
+.then(res => res.json())
+.then(data => {
+  console.log(data.streem, gnssStatus)
+  if (data.streem && gnssStatus) {
+    const btn = document.getElementById("TrackingBtn");
+    btn.innerText = "Stop Tracking";
+         btn.style.background = "#1f1f1f";
+        btn.style.color = "white";
+        btn.style.fontWeight = "bold";
+        btn.style.border = "1px solid #00cfd1"
+        isRunning = true;
+      }
+    })
+    .catch(err => console.error(err));
+
+    function toggleTracking() {
+    const btn = document.getElementById("TrackingBtn");
+    if( isRunning === false && gnssStatus===false){
+      showAlert(
+  "GNSS Required",
+  "Please start GNSS first before tracking."
+);
+      return
+    }
+
+    if (!isRunning) {
+      console.log(isRunning)
+      console.log("in2")
+      fetch('/start-stream') 
+        .then(() => {
+          btn.innerText = "Stop Tracking";
+            btn.style.background = "#1f1f1f";
+        btn.style.color = "white";
+        btn.style.fontWeight = "bold";
+        btn.style.border = "1px solid #00cfd1"
+          isRunning = true;
+        })
+        .catch(err => console.error(err));
+    } else {
+
+      fetch('/stop-stream')  
+        .then(() => {
+          btn.innerText = "Start Tracking";
+          btn.style.background = "#00cfd1";
+          btn.style.fontWeight = "bold";
+          isRunning = false;
+        })
+        .catch(err => console.error(err));
+    }
+  }
+  
+
+  async function toggleOperation() {
+    const btn = document.getElementById("OperationBtn");
+
+    if (!isOPerationRunning) {
+
+      try{
+        await fetch('/api/run-operation');
+
+        const res = await fetch('/api/check-status');
+        const data = await res.json();
+
+        if (data.operationStatus) {
+        btn.innerText = "Stop Operation";
+         btn.style.background = "#1f1f1f";
+        btn.style.color = "white";
+        btn.style.fontWeight = "bold";
+        btn.style.border = "1px solid #00cfd1"
+        isOPerationRunning = true;
+         updateOperationStatus(true);
+      }
+      }
+      catch(err){
+        console.log(err)
+      }
+    } else {
+    
+      fetch('/api/stop-operation')  
+        .then(() => {
+          btn.innerText = "Start Operation";
+          btn.style.fontWeight = "bold";
+          btn.style.background = "#00cfd1";
+          isOPerationRunning = false;
+          updateOperationStatus(false);
+        })
+        .catch(err => console.error(err));
+    }
+  }
+
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+</script>
+
+</body>
+</html>

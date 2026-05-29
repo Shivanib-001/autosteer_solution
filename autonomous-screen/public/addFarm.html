@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard UI</title>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+
+  body {
+    background: #2c2c2c;
+    height: 100vh;
+  }
+
+  .app {
+    width: 100%;
+    height: 100vh;
+    background: #1f1f1f;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background: #111;
+    color: #fff;
+    font-size: 16px;
+    gap: 10px;
+  }
+
+  .card {
+    flex: 1;
+    padding: 20px;
+    background: #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .card h2 {
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 22px;
+  }
+
+.grid {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;   
+  gap: 15px;
+  align-items: center;
+}
+
+  .btn {
+  width: 280px;             
+ padding: 10px 20px;
+  min-height: 70px;        
+  border: 2px solid #00e5ff;
+  border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+text-decoration: none;
+  font-size: 20px;
+  font-weight: bold;
+   transition: 0.3s;
+}
+
+  .btn:hover {
+    border: 2px solid #000000;
+    transform: translateY(-5px);
+  }
+
+  .btn1 {
+  width: 280px;             
+ padding: 10px 20px;
+  min-height: 70px;         
+  border: 2px solid #00e5ff;
+  border-radius: 10px;
+    color: #000000;
+    cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+text-decoration: none;
+  font-size: 20px;
+  font-weight: bold;
+  background-color: #00e5ff;
+   transition: 0.3s;
+}
+
+  .btn1:hover {
+    background-color: #2c2c2c;
+    color: #ffffff;
+    border: 2px solid #00e5ff;
+    transform: translateY(-5px);
+  }
+
+  .icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+    object-fit: contain;
+  }
+
+
+  .btn span {
+    font-size: 20px;
+    text-align: center;
+  }
+
+#goBackButton {
+  all: unset;
+}
+
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon1{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .btn {
+      min-height: 100px;
+      padding: 15px;
+    }
+  }
+
+  
+
+  @media (max-width: 400px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Add Farm</span>
+    <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon1">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon1">
+    </div>
+
+  </div>
+</div>
+  <div class="card">
+
+
+    <div class="grid">
+
+      <a href="/plot-farm" class="btn1">
+        <span>Plot Farm</span>
+      </a>
+
+      <a href="/trace-farm" class="btn">
+        <span>Trace Farm</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+<script>
+    function goBack() {
+        window.location.href = "/farm";
+        }
+
+
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    isOPerationRunning = true;
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    isRunning = false;
+
+  }
+})
+.catch(err => console.error(err));
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1779693633315,
+    "tractor_name": "demo",
+    "turning_radius": "1",
+    "tractor_width": "2.2",
+    "tractor_wheel_base": "1.6",
+    "tractor_other": "",
+    "tractor_image": null
+  },
+  {
+    "id": 1779690764990,
+    "tractor_name": "A",
+    "turning_radius": "4",
+    "tractor_width": "4",
+    "tractor_wheel_base": "2.5",
+    "tractor_other": "",
+    "tractor_image": null
+  },
+  {
+    "id": 1779690868197,
+    "tractor_name": "B",
+    "turning_radius": "1",
+    "tractor_width": "1",
+    "tractor_wheel_base": "1",
+    "tractor_other": "",
+    "tractor_image": null
+  },
+  {
+    "id": 1779703591323,
+    "tractor_name": "1",
+    "turning_radius": "2",
+    "tractor_width": "2",
+    "tractor_wheel_base": "2",
+    "tractor_other": "T",
+    "tractor_image": null
+  }
+]

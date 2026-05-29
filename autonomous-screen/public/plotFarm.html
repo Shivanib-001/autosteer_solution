@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plot Farm</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 12px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+}
+
+.container {
+  display: flex;
+  height: calc(100vh - 50px);
+  gap: 10px;
+  padding: 10px;
+}
+
+.map-box {
+  flex: 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.panel {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input {
+  padding: 10px;
+  background: #1f1f1f;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 5px;
+}
+
+.btn {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #00cfd1;
+  color: black;
+}
+
+.cancel {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+}
+
+.search-box input {
+  flex: 1;          
+}
+
+.search-box button {
+  white-space: nowrap; 
+}
+.start, .stop  { background: #00cfd1; color: black; }
+
+#goBackButton {
+  all: unset;
+}
+
+    .btn-start {
+      background: #00cfd1;
+      color: black;
+      padding: 5px;
+      border-radius: 5px;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+        .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+
+@media (max-width: 500px) {
+  .search-box {
+    flex-direction: column;
+  }
+}
+
+/* Custom Alert Popup */
+
+.custom-alert {
+  display: none;
+
+  position: fixed;
+  z-index: 5000;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.7);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.alert-box {
+  width: 90%;
+  max-width: 380px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 14px;
+
+  padding: 30px 25px;
+
+  text-align: center;
+
+  animation: popupAnim 0.25s ease;
+}
+
+@keyframes popupAnim {
+
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+
+.alert-icon {
+  width: 70px;
+  height: 70px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 34px;
+  font-weight: bold;
+
+  background: #00cfd1;
+  color: white;
+}
+
+#alertTitle {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+#alertMessage {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.alert-btn {
+  border: none;
+  background: #00cfd1;
+
+  color: white;
+
+  padding: 12px 30px;
+
+  border-radius: 6px;
+
+  font-size: 16px;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.alert-btn:hover {
+  background: #00b5b7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Plot Farm</span>
+    <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+
+  <div class="panel">
+    <div class="search-box">
+    <input 
+        type="text" 
+        id="search" 
+        placeholder="Search Location (Eg: Faridabad)" 
+        onkeypress="handleEnter(event)"
+    >
+    <button class="btn primary" onclick="searchLocation()">Search</button>
+    </div>
+
+    <p id="status" style="font-size:12px; color:#aaa;"></p>
+    <input type="text" id="FarmName" placeholder="Farm Name">
+        <button class="btn primary" onclick="generatePlot()">Generate</button>
+        <button class="btn primary" onclick="clearMap()">Clear</button>
+     <button id="TrackingBtn" class="btn-start" onclick="toggleTracking()">Start Tracking</button>
+  </div>
+
+</div>
+
+<!-- Alert Popup -->
+<div class="custom-alert" id="alertPopup">
+
+  <div class="alert-box">
+
+    <div class="alert-icon" id="alertIcon">
+      !
+    </div>
+
+    <h2 id="alertTitle">Alert</h2>
+
+    <p id="alertMessage">
+      Message here
+    </p>
+
+    <button class="alert-btn" onclick="closeAlert()">
+      OK
+    </button>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+function showAlert(title, message) {
+
+  document.getElementById("alertTitle").innerText = title;
+
+  document.getElementById("alertMessage").innerText = message;
+
+  document.getElementById("alertPopup").style.display = "flex";
+
+}
+
+function closeAlert() {
+
+  document.getElementById("alertPopup").style.display = "none";
+
+}
+
+  let pathCoords = [];
+ const ws = new WebSocket(`ws://${window.location.hostname}:5000`);
+
+
+ws.onopen = () => {
+  console.log('Connected to server');
+};
+
+ws.onmessage = (event) => {
+  console.log(event.data)
+  const newData = event.data.split(" ");
+  const lat = newData[1];
+  const lng = newData[2];
+  const speed = newData[4];
+  const heading = newData[5];
+
+  if (!lat || !lng) return;
+
+  const newPoint = [lat, lng];
+
+  pathCoords.push(newPoint);
+
+
+  // polyline.setLatLngs(pathCoords);
+  vehicleMarker.setLatLng(newPoint);
+
+  map.setView(newPoint);
+
+};
+
+
+ws.onclose = () => {
+  console.log('Disconnected');
+};
+
+let map = L.map('map').setView([28.6139, 77.2090], 13);
+
+L.tileLayer(
+  'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 22,
+    attribution: 'Google'
+  }
+).addTo(map);
+
+  const tractorIcon = L.icon({
+    iconUrl: './image/tractorLogo.svg',
+    iconSize: [30, 30],
+    iconAnchor: [16, 28]
+  });
+
+  let vehicleMarker = L.marker([0, 0], {
+    icon: tractorIcon
+  }).addTo(map);
+
+// const polyline = L.polyline([], {
+//   color: '#00ffff',
+//   weight: 4
+// }).addTo(map);
+
+let points = [];
+let markers = [];
+// let polygon = L.polygon([], { color: 'blue' }).addTo(map);
+
+map.on('click', function(e) {
+  const { lat, lng } = e.latlng;
+
+  const marker = L.marker([lat, lng]).addTo(map);
+  markers.push(marker);
+
+  points.push([lat, lng]);
+
+  polygon.setLatLngs(points);
+});
+
+function handleEnter(e) {
+  if (e.key === "Enter") {
+    searchLocation();
+  }
+}
+
+function searchLocation() {
+  const query = document.getElementById("search").value.trim();
+  const status = document.getElementById("status");
+
+  if (!query) {
+    status.textContent = "Please enter a location";
+    return;
+  }
+
+  status.textContent = "Searching...";
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.length === 0) {
+        status.textContent = "Location not found";
+        return;
+      }
+
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+
+      map.setView([lat, lon], 15);
+      status.textContent = "Location found ✅";
+    })
+    .catch(err => {
+      console.error(err);
+      status.textContent = "Error searching location";
+    });
+}
+
+
+function clearMap() {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  points = [];
+  polygon.setLatLngs([]);
+}
+
+
+function goBack() {
+  window.location.href = "/farm";
+}
+
+function generatePlot() {
+  const farmName = document.getElementById("FarmName").value.trim();
+
+  if (!farmName) {
+    showAlert(
+      "Farm Name Required",
+      "Please enter a farm name."
+    );
+    return;
+  }
+
+  if(points.length<3){
+    showAlert(
+  "Boundary Required",
+  "Please select at least 3 points to create a farm boundary."
+);
+    return
+  }
+
+  console.log("Sending Data:", { farmName, points });
+
+  fetch('/api/plotFarm', {
+    method: 'POST',
+    body: JSON.stringify({
+      farmName: farmName,
+      points: points
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+  .then(res => {
+    console.log("Response:", res);
+    if(res.status !== 200) {
+      showAlert(
+  "Duplicate Farm Name",
+  "Farm name already exists. Please choose a different name."
+);
+    }
+    else{
+      // alert("Saved!");
+      setTimeout(() => {
+        window.location.href = "/farm";
+      }, 500);
+    }
+  })
+  .catch(err => {
+    console.error("ERROR:", err);
+  });
+}
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+
+  if (data.operationStatus === true) {
+
+    isOPerationRunning = true;
+
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log("in")
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    console.log(gnssStatus)
+    isRunning = false;
+    fetch('/stop-stream')  
+        .then(() => {
+          console.log("in1")
+          btn.innerText = "Start Tracking";
+          btn.style.background = "#00cfd1";
+          isRunning = false;
+        })
+        .catch(err => console.error(err));
+
+  }
+})
+.catch(err => console.error(err));
+
+fetch('/check-streem')
+.then(res => res.json())
+.then(data => {
+  if (data.streem && gnssStatus) {
+    const btn = document.getElementById("TrackingBtn");
+    btn.innerText = "Stop Tracking";
+        btn.style.background = "red";
+        btn.style.color = "white";
+        isRunning = true;
+      }
+    })
+    .catch(err => console.error(err));
+
+function toggleTracking() {
+    const btn = document.getElementById("TrackingBtn");
+    if( isRunning === false && gnssStatus===false){
+      showAlert(
+  "GNSS Required",
+  "Please start GNSS first before tracking."
+);
+      return
+    }
+
+    if (!isRunning) {
+      console.log(isRunning)
+      console.log("in2")
+      fetch('/start-stream') 
+        .then(() => {
+          btn.innerText = "Stop Tracking";
+          btn.style.background = "red";
+          isRunning = true;
+        })
+        .catch(err => console.error(err));
+    } else {
+
+      fetch('/stop-stream')  
+        .then(() => {
+          btn.innerText = "Start Tracking";
+          btn.style.background = "#00cfd1";
+          isRunning = false;
+        })
+        .catch(err => console.error(err));
+    }
+  }
+    updateGNSSStatus(false);
+updateOperationStatus(false);
+</script>
+
+</body>
+</html>

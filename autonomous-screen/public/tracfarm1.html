@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trace Farm</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 12px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+}
+
+.container {
+  display: flex;
+  height: calc(90vh - 60px);
+  gap: 10px;
+  padding: 10px;
+}
+
+.map-box {
+  flex: 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+.panel {
+  width: 250px;
+  padding: 20px;
+}
+
+.card {
+  background: radial-gradient(circle at top, #2a2a2a, #1a1a1a);
+
+  border-radius: 15px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.label {
+  margin-top: -30px;
+  font-size: 14px;
+}
+
+.value {
+  font-size: 18px;
+}
+
+.dir {
+  position: absolute;
+  color: #aaa;
+}
+
+.n { top: 5px; left: 50%; transform: translateX(-50%); }
+.s { bottom: 30px; left: 50%; transform: translateX(-50%); }
+.e { right: 5px; top: 50%; transform: translateY(-50%); }
+.w { left: 5px; top: 50%; transform: translateY(-50%); }
+
+.compass-wrap {
+  position: relative;
+}
+
+.footer {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+}
+
+.start { background: #00cfd1; color: black; }
+.stop, .save, .cancel {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button onclick="goBack()">⬅</button>
+  <span>Trace Farm</span>
+</div>
+
+<div class="container">
+
+
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+
+  <div class="panel">
+
+
+  <div class="card">
+    <canvas id="speedCanvas" width="260" height="200"></canvas>
+    <div class="value" id="speedVal">- Km/h</div>
+    <div style="margin: 3px;"  class="label">Speed</div>
+  </div>
+
+  <div class="card compass-wrap">
+    <canvas id="compassCanvas" width="260" height="260"></canvas>
+    <div class="value" id="degVal">-°</div>
+
+    <div class="dir n">N</div>
+    <div class="dir s">S</div>
+    <div class="dir e">E</div>
+    <div class="dir w">W</div>
+  </div>
+
+  </div>
+
+</div>
+
+<div class="footer">
+  <button class="btn start" onclick="start()">Start</button>
+  <button class="btn stop" onclick="stop()">Stop</button>
+  <button class="btn save">Save</button>
+  <button class="btn cancel" onclick="location.href='/'">Cancel</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+let map = L.map('map').setView([28.6139, 77.2090], 15);
+
+L.tileLayer(
+  'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 22,
+    attribution: 'Google'
+  }
+).addTo(map);
+function drawSpeed(speed) {
+  const c = document.getElementById("speedCanvas");
+  const ctx = c.getContext("2d");
+
+  ctx.clearRect(0,0,260,200);
+
+  const cx = 130;
+  const cy = 150;
+  const r = 90;
+
+
+  let grad = ctx.createLinearGradient(0,0,260,0);
+  grad.addColorStop(0,"#00cfd1");
+  grad.addColorStop(1,"#008c8f");
+
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = "#333";
+
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,Math.PI,0);
+  ctx.stroke();
+
+  let end = Math.PI + (speed/70)*Math.PI;
+  ctx.strokeStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,Math.PI,end);
+  ctx.stroke();
+
+  for(let i=0;i<=70;i+=10){
+    let angle = Math.PI + (i/70)*Math.PI;
+    let x1 = cx + Math.cos(angle)*(r-10);
+    let y1 = cy + Math.sin(angle)*(r-10);
+    let x2 = cx + Math.cos(angle)*(r+5);
+    let y2 = cy + Math.sin(angle)*(r+5);
+
+    ctx.strokeStyle="#aaa";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+ 
+    ctx.fillStyle="#fff";
+    ctx.font="12px Arial";
+    let tx = cx + Math.cos(angle)*(r-25);
+    let ty = cy + Math.sin(angle)*(r-25);
+    ctx.fillText(i,tx-5,ty+5);
+  }
+
+
+  let ang = Math.PI + (speed/70)*Math.PI;
+  let nx = cx + Math.cos(ang)*(r-30);
+  let ny = cy + Math.sin(ang)*(r-30);
+
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(nx,ny);
+  ctx.stroke();
+
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,6,0,2*Math.PI);
+  ctx.fillStyle="#00cfd1";
+  ctx.fill();
+}
+
+
+function drawCompass(deg){
+  const c = document.getElementById("compassCanvas");
+  const ctx = c.getContext("2d");
+
+  ctx.clearRect(0,0,260,260);
+
+  const cx=130, cy=130, r=100;
+
+
+  ctx.strokeStyle="#00cfd1";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,2*Math.PI);
+  ctx.stroke();
+
+
+  for(let i=0;i<360;i+=10){
+    let angle=(i-90)*Math.PI/180;
+
+    let len = (i%30===0)?15:7;
+
+    let x1 = cx + Math.cos(angle)*(r-len);
+    let y1 = cy + Math.sin(angle)*(r-len);
+    let x2 = cx + Math.cos(angle)*(r);
+    let y2 = cy + Math.sin(angle)*(r);
+
+    ctx.strokeStyle="#aaa";
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+  }
+
+
+  let ang=(deg-90)*Math.PI/180;
+  let nx=cx+Math.cos(ang)*(r-30);
+  let ny=cy+Math.sin(ang)*(r-30);
+
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(nx,ny);
+  ctx.stroke();
+
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,6,0,2*Math.PI);
+  ctx.fillStyle="#00cfd1";
+  ctx.fill();
+}
+
+function stop() {
+  clearInterval(interval);
+}
+
+let currentSpeed = 0;
+let targetSpeed = 0;
+
+let currentDeg = 0;
+let targetDeg = 0;
+
+
+function animate() {
+
+  currentSpeed += (targetSpeed - currentSpeed) * 0.05;
+  currentDeg += (targetDeg - currentDeg) * 0.05;
+
+  drawSpeed(currentSpeed);
+  drawCompass(currentDeg);
+
+  document.getElementById("speedVal").innerText =
+    currentSpeed.toFixed(2) + " Km/h";
+
+  document.getElementById("degVal").innerText =
+    Math.floor(currentDeg) + "°";
+
+  requestAnimationFrame(animate);
+}
+
+
+setInterval(() => {
+  targetSpeed = Math.random() * 70;
+  targetDeg = Math.random() * 360;
+}, 2000);
+
+
+animate();
+
+function goBack() {
+  window.location.href = "/add-farm";
+}
+</script>
+
+</body>
+</html>

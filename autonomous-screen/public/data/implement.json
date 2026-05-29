@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1779083215810,
+    "implement_name": "Rotavator",
+    "implement_type": "Rotavator",
+    "implement_width": "1.9",
+    "implement_other": "",
+    "implement_image": null
+  },
+  {
+    "id": 1779083235236,
+    "implement_name": "Cultivator",
+    "implement_type": "Cultivator",
+    "implement_width": "2.2",
+    "implement_other": "",
+    "implement_image": null
+  },
+  {
+    "id": 1779704506673,
+    "implement_name": "P",
+    "implement_type": "Plough",
+    "implement_width": "2",
+    "implement_other": "",
+    "implement_image": null
+  },
+  {
+    "id": 1779704530148,
+    "implement_name": "H",
+    "implement_type": "Harrow",
+    "implement_width": "3",
+    "implement_other": "",
+    "implement_image": null
+  }
+]

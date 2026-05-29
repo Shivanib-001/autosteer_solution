@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard UI</title>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+
+  body {
+    background: #2c2c2c;
+    height: 100vh;
+  }
+
+
+  .app {
+    width: 100%;
+    height: 100vh;
+    background: #1f1f1f;
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #111;
+    color: #fff;
+    font-size: 16px;
+  }
+
+
+  .card {
+    flex: 1;
+    padding: 20px;
+    background: #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .card h2 {
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 27px;
+  }
+
+
+  .grid {
+    width: 100%;
+    max-width: 1000px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+  }
+
+
+  .btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border: 2px solid #00e5ff;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+    min-height: 120px;
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    border: 2px solid #000000;
+    transform: translateY(-5px);
+  }
+
+
+  .icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 10px;
+    object-fit: contain;
+  }
+
+
+  .btn span {
+    font-size: 22px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .btn-start {
+    background: #00cfd1;
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    padding: 5px;
+    border-radius: 5px;
+  }
+
+
+  .btn-off {
+    background: #ff0000;
+    color: rgb(255, 255, 255);
+    padding: 5px;
+    border-radius: 5px;
+    margin-left: 10px;
+    font-weight: bold;
+  }
+
+      .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.logo{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .icon {
+      width: 64px;
+      height: 64px;
+    }
+
+    .btn {
+      min-height: 100px;
+      padding: 15px;
+    }
+  }
+
+
+  @media (max-width: 400px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Shutdown Modal */
+
+.shutdown-modal {
+  display: none;
+
+  position: fixed;
+  z-index: 9999;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.75);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.shutdown-box {
+
+  width: 90%;
+  max-width: 400px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 14px;
+
+  padding: 30px 25px;
+
+  text-align: center;
+
+  animation: popupAnim 0.25s ease;
+}
+
+@keyframes popupAnim {
+
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+
+.shutdown-icon {
+
+  width: 80px;
+  height: 80px;
+
+  border-radius: 50%;
+
+  background: red;
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 42px;
+
+  margin: 0 auto 20px;
+}
+
+.shutdown-text {
+  margin-top: 15px;
+  color: #666;
+}
+
+.countdown {
+
+  font-size: 60px;
+  font-weight: bold;
+
+  color: red;
+
+  margin: 20px 0;
+}
+
+.shutdown-actions {
+
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-btn,
+.cancel-btn {
+
+  min-width: 120px;
+
+  padding: 12px 20px;
+
+  border-radius: 6px;
+
+  border: none;
+
+  cursor: pointer;
+
+  font-size: 16px;
+
+  transition: 0.3s;
+}
+
+.confirm-btn {
+  background: red;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: #cc0000;
+}
+
+.cancel-btn {
+  background: #00cfd1;
+  color: black;
+}
+
+.cancel-btn:hover {
+  background: #00b5b7;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+
+  <div class="topbar">
+    <div style="font-weight: bold; font-size: 22px;">Home</div>
+    <div class="status-container">
+      <button id="gnssBtn" class="btn-start" onclick="toggleGNSS()">Start GNSS</button>
+     <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="logo">
+      <button id="powerOffBtn" class="btn-off" onclick="openShutdownModal()">
+  Power Off
+</button>
+    </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Start building your path</h2>
+
+    <div class="grid">
+
+      <a href="/tractor" class="btn">
+        <img src="./image/Tractor-icon.svg" alt="Tractor" class="icon">
+        <span>Tractor</span>
+      </a>
+
+      <a href="/implement" class="btn">
+        <img src="./image/Implement-icon.svg" alt="Implement" class="icon">
+        <span>Implement</span>
+      </a>
+
+      <a href="/farm" class="btn">
+        <img src="./image/Farmland-icon.svg" alt="Farm Land" class="icon">
+        <span>Farm Land</span>
+      </a>
+
+      <a href="/path" class="btn">
+        <img src="./image/path-icon.svg" alt="Path" class="icon">
+        <span>Path</span>
+      </a>
+
+      <a href="/settings" class="btn">
+        <img src="./image/Settings-Icon.svg" alt="Settings" class="icon">
+        <span>Settings</span>
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Shutdown Modal -->
+
+<div class="shutdown-modal" id="shutdownModal">
+
+  <div class="shutdown-box">
+
+    <div class="shutdown-icon">
+      ⏻
+    </div>
+
+    <h2>System Shutdown</h2>
+
+    <p class="shutdown-text">
+      Your system will shutdown in
+    </p>
+
+    <div class="countdown" id="countdown">
+      60
+    </div>
+
+    <div class="shutdown-actions">
+
+      <button class="cancel-btn" onclick="cancelShutdown()">
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+<script>
+
+  let isRunning = false;
+  let isOPerationRunning = false;
+
+  function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+
+  fetch('/api/check-status')
+    .then(res => res.json())
+    .then(data => {
+      if (data.cProcessStatus) {
+        const btn = document.getElementById("gnssBtn");
+        btn.innerText = "Stop GNSS";
+        btn.style.background = "#1f1f1f";
+        btn.style.color = "white";
+        btn.style.fontWeight = "bold";
+        btn.style.border = "1px solid #00cfd1";
+        isRunning = true;
+      }
+       if (data.operationStatus === true) {
+
+          isOPerationRunning = true;
+
+          updateOperationStatus(true);
+        } else {
+          updateOperationStatus(false);
+        }
+    })
+    .catch(err => console.error(err));
+
+async function toggleGNSS() {
+
+  const btn = document.getElementById("gnssBtn");
+
+  if (!isRunning) {
+
+    try {
+      await fetch('/api/run-c-project');
+
+      const res = await fetch('/api/check-status');
+      const data = await res.json();
+
+      console.log(data);
+
+      if (data.cProcessStatus) {
+        btn.innerText = "Stop GNSS";
+        btn.style.background = "#1f1f1f";
+        btn.style.color = "white";
+        btn.style.fontWeight = "bold";
+        btn.style.border = "1px solid #00cfd1";
+        isRunning = true;
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  } else {
+
+    fetch('/api/stop-c-project')
+      .then(() => {
+        btn.innerText = "Start GNSS";
+        btn.style.background = "#00cfd1";
+        isRunning = false;
+      })
+      .catch(err => console.error(err));
+  }
+}
+
+let shutdownTimer = null;
+let countdownValue = 60;
+
+function openShutdownModal() {
+
+  fetch('/api/shutdown')
+    .then(() => {
+      console.log("Shutdown triggered");
+    })
+    .catch(err => console.error(err));
+
+  document.getElementById("shutdownModal").style.display = "flex";
+
+  countdownValue = 60;
+
+  document.getElementById("countdown").innerText = countdownValue;
+
+  clearInterval(shutdownTimer);
+
+  shutdownTimer = setInterval(() => {
+
+    countdownValue--;
+
+    document.getElementById("countdown").innerText = countdownValue;
+
+    if (countdownValue <= 0) {
+
+      clearInterval(shutdownTimer);
+
+      triggerShutdown();
+    }
+
+  }, 1000);
+
+}
+
+function cancelShutdown() {
+
+  clearInterval(shutdownTimer);
+
+  fetch('/api/cancel-shutdown')
+    .then(() => {
+      console.log("Shutdown cancelled");
+    })
+    .catch(err => console.error(err));
+
+  document.getElementById("shutdownModal").style.display = "none";
+
+}
+
+updateOperationStatus(false);
+
+</script>
+</html>

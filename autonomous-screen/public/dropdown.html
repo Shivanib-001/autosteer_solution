@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generate Path</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 12px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+}
+
+
+.container {
+  display: flex;
+  gap: 10px;
+  height: calc(100vh - 50px);
+  padding: 10px;
+}
+
+.map-box {
+  flex: 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.panel {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+input {
+  padding: 10px;
+  background: #1f1f1f;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 5px;
+}
+
+.btn {
+  padding: 12px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #00cfd1;
+  color: black;
+}
+
+.custom-select {
+  background: #1f1f1f;
+  border: 1px solid #00cfd1;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+}
+
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #00cfd1;
+  border-radius: 5px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 999;
+}
+
+.dropdown div {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown div:hover {
+  background: #00cfd1;
+  color: black;
+}
+
+@media(max-width: 700px){
+  .container {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+   <button onclick="goBack()">⬅</button>
+  <span>Add Path</span>
+</div>
+
+<div class="container">
+
+
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+
+  <div class="panel">
+
+    <div>
+      <label>Farm Name :</label>
+      <div class="custom-select" onclick="toggleDropdown('farmDropdown')">
+        <span id="farmSelected">Select Farm</span>
+        <div class="dropdown" id="farmDropdown"></div>
+      </div>
+    </div>
+
+    <div>
+      <label>Tractor Name :</label>
+      <div class="custom-select" onclick="toggleDropdown('tractorDropdown')">
+        <span id="tractorSelected">Select Tractor</span>
+        <div class="dropdown" id="tractorDropdown"></div>
+      </div>
+    </div>
+
+    <div>
+      <label>Implement :</label>
+      <div class="custom-select" onclick="toggleDropdown('implementDropdown')">
+        <span id="implementSelected">Select Implement</span>
+        <div class="dropdown" id="implementDropdown"></div>
+      </div>
+    </div>
+
+    <button class="btn primary" onclick="generatePath()">Generate</button>
+   <input type="text" id="plotName" placeholder="Plot Name">
+  <button class="btn primary" onclick="Save()">Save</button>
+  <button class="btn primary" onclick="clearMap()">Discard</button>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+let map = L.map('map').setView([28.6139, 77.2090], 15);
+
+L.tileLayer(
+  'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 22,
+    attribution: 'Google'
+  }
+).addTo(map);
+
+let points = [];
+let markers = [];
+let polygon = L.polygon([], { color: 'blue' }).addTo(map);
+let generatedPath = [];
+let polyline = null;
+
+function clearMap() {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  points = [];
+  polyline.setLatLngs([]);
+}
+
+function toggleDropdown(id) {
+  document.querySelectorAll('.dropdown').forEach(d => {
+    if (d.id !== id) d.style.display = 'none';
+  });
+
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+window.addEventListener('click', function(e) {
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.dropdown').forEach(d => {
+      d.style.display = 'none';
+    });
+  }
+});
+
+let farmData = [];
+let tractorData = [];
+let implementData = [];
+
+let selectedFarm = null;
+let selectedTractor = null;
+let selectedImplement = null;
+
+fetch('./data/farm.json')
+  .then(res => res.json())
+  .then(data => {
+    farmData = data;
+    const dropdown = document.getElementById("farmDropdown");
+
+    data.forEach(v => {
+      const item = document.createElement("div");
+      item.textContent = v.farmName;
+
+      item.onclick = function(e) {
+        e.stopPropagation();
+
+
+        selectedFarm = v;
+        document.getElementById("farmSelected").innerText = v.farmName;
+
+
+        dropdown.style.display = "none";
+
+        if (v.coordinates) {
+          drawFarmOnMap(v.coordinates);
+        } else {
+          console.warn("No coordinates found for farm:", v);
+        }
+      };
+
+      dropdown.appendChild(item);
+    });
+  });
+
+  let farmLayer = null;
+
+function drawFarmOnMap(coords) {
+
+  if (farmLayer) {
+    map.removeLayer(farmLayer);
+  }
+
+  farmLayer = L.polygon(coords, {
+    color: "lime",
+    fillColor: "green",
+    fillOpacity: 0.3
+  }).addTo(map);
+
+
+  map.fitBounds(farmLayer.getBounds());
+}
+
+fetch('./data/tractor.json')
+  .then(res => res.json())
+  .then(data => {
+    const dropdown = document.getElementById("tractorDropdown");
+
+    data.forEach(v => {
+      const item = document.createElement("div");
+      item.textContent = v.tractor_name;
+
+      item.onclick = function(e) {
+        e.stopPropagation();
+        document.getElementById("tractorSelected").innerText = v.tractor_name;
+        selectedTractor = v;
+        dropdown.style.display = "none";
+      };
+
+      dropdown.appendChild(item);
+    });
+  });
+
+
+
+fetch('./data/implement.json')
+  .then(res => res.json())
+  .then(data => {
+    const dropdown = document.getElementById("implementDropdown");
+
+    data.forEach(i => {
+      const item = document.createElement("div");
+      item.textContent = i.implement_name;
+
+      item.onclick = function(e) {
+        selectedImplement = i;
+        e.stopPropagation();
+        document.getElementById("implementSelected").innerText = i.implement_name;
+        dropdown.style.display = "none";
+      };
+
+      dropdown.appendChild(item);
+    });
+  });
+
+  async function generatePath() {
+  if (!selectedFarm || !selectedTractor || !selectedImplement) {
+    alert("Please select farm, tractor and implement");
+    return;
+  }
+
+  const data = {
+    farm: selectedFarm,
+    tractor: selectedTractor,
+    implement: selectedImplement
+  };
+    // console.log(farmData,tractorData,implementData);
+    console.log("Data to send:", data);
+  try{
+    const res = await fetch("/api/generatePath", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify(data)
+        });
+        console.log("Response status:", res.body);
+    const result = await res?.json();
+    console.log("Res:", result);
+    generatedPath = result?.path?.tp;
+    if(polyline){
+         map.removeLayer(polyline);
+    }
+    polyline = L.polyline(generatedPath, {color:"red"}).addTo(map);
+    alert("Path generated successfully!");
+  }
+  catch(err){
+    console.error("Error generating path:", err);
+    alert("Failed to generate path");
+  }
+}
+
+function save() {
+  const farmName = document.getElementById("FarmName").value.trim();
+
+  if (!farmName) {
+    alert("Please enter a farm name");
+    return;
+  }
+
+  console.log("Sending Data:", { farmName, points });
+
+  fetch('/api/plotFarm', {
+    method: 'POST',
+    body: JSON.stringify({
+      farmName: farmName,
+      points: points
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+  .then(res => {
+    console.log("Response:", res);
+    if(res.status !== 200) {
+       alert("Farm Name already exists. Please choose a different name.");
+    }
+    else{
+      alert("Saved!");
+      setTimeout(() => {
+        window.location.href = "/farm";
+      }, 500);
+    }
+  })
+  .catch(err => {
+    console.error("ERROR:", err);
+  });
+}
+
+</script>
+
+</body>
+</html>

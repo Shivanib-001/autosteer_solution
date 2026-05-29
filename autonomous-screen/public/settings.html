@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm</title>
+
+<style>
+
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 15px;
+  background: #111;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.container {
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 18px;
+  justify-content: center;
+}
+
+.card {
+  width: 165px;
+  height: 266px;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid #444;
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border: 2px solid #00e5ff;
+  transform: translateY(-10px);
+}
+
+.card img {
+  width: 147px;
+  height: 98px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 5px;
+
+  display: block;
+  margin: 0 auto;
+}
+
+.btn {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+}
+
+.select {
+  background: #00CFDD;
+  color: black;
+}
+
+.delete {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+
+.add-card {
+  border: 2px dashed #555;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+h3, p {
+  margin: 0;
+  padding: 0;
+}
+
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.7);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 400px;
+
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 20px;
+
+  position: relative;
+
+  border: 1px solid #555;
+}
+
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.detail-row {
+  background: #1a1a1a;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.modal-title {
+  margin-bottom: 20px;
+}
+
+
+#goBackButton {
+  all: unset;
+}
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Delete Popup */
+
+#deleteModal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.7);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.delete-modal-box {
+  width: 90%;
+  max-width: 420px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 12px;
+
+  padding: 30px 25px;
+
+  text-align: center;
+
+  animation: popup 0.25s ease;
+}
+
+@keyframes popup {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.delete-img {
+  width: 120px;
+  margin-bottom: 15px;
+}
+
+#deleteTitle {
+  font-size: 24px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.delete-subtext {
+  color: #666;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.delete-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.delete-confirm-btn,
+.delete-cancel-btn {
+  min-width: 120px;
+  padding: 12px 20px;
+
+  border-radius: 6px;
+
+  font-size: 16px;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.delete-confirm-btn {
+  border: none;
+  background: #00CFDD;
+  color: white;
+}
+
+.delete-confirm-btn:hover {
+  background: #00b7c4;
+}
+
+.delete-cancel-btn {
+  background: white;
+  border: 1px solid #00CFDD;
+  color: #222;
+}
+
+.delete-cancel-btn:hover {
+  background: #f5f5f5;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Setting</span>
+  <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+
+<div class="container">
+
+  <h2>We’re currently working on this page and it will be available soon.</h2>
+
+  <div class="grid" id="farmGrid"></div>
+
+</div>
+
+
+<script>
+
+
+
+
+
+
+
+
+
+
+function goBack() {
+
+  window.location.href = "/dashboard";
+
+}
+
+
+
+
+
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    isOPerationRunning = true;
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    isRunning = false;
+
+  }
+})
+.catch(err => console.error(err));
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+</script>
+
+</body>
+</html>

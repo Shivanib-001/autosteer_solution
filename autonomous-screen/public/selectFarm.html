@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selected Farm</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 12px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+}
+
+.container {
+  display: flex;
+  height: calc(98vh - 50px);
+  gap: 10px;
+  padding: 10px;
+}
+
+.map-box {
+  flex: 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.panel {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input {
+  padding: 10px;
+  background: #1f1f1f;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 5px;
+}
+
+.btn {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #00cfd1;
+  color: black;
+}
+
+.cancel {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+}
+
+.search-box input {
+  flex: 1;          
+}
+
+.search-box button {
+  white-space: nowrap; 
+}
+.start, .stop  { background: #00cfd1; color: black; }
+
+.detail-card {
+  background: #1f1f1f;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #444;
+}
+
+.detail-card label {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.detail-card h3 {
+  margin-top: 8px;
+  color: #00cfd1;
+  word-break: break-word;
+}
+#goBackButton {
+  all: unset;
+}
+
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+@media (max-width: 500px) {
+  .search-box {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Selected Farm</span>
+    <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+<div class="container">
+
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+
+  <div class="panel">
+
+  <h2>Farm Details</h2>
+
+  <div class="detail-card">
+
+    <label>Farm Name</label>
+    <h3 id="farmNameText">Loading...</h3>
+    <label>Latitude</label>
+    <h3 id="latText">Loading...</h3>
+    <label>Longitude</label>
+    <h3 id="longText">Loading...</h3>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+     const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+let farmName = ""
+let lat = ""
+let long = ""
+  fetch(`./data/farm.json`)
+    .then(res => res.json())
+    .then(data => {
+      const findItem = data.find(item => String(item.id) === id);
+
+      if (findItem) {
+        console.log("Found Path Data:", findItem);
+        const cords = findItem.coordinates;
+        farmName = findItem.farmName
+        lat = findItem.coordinates[0][0]
+        long = findItem.coordinates[0][1]
+        document.getElementById("farmNameText").innerText = farmName;
+        document.getElementById("latText").innerText = lat;
+        document.getElementById("longText").innerText = long;
+        drawFarmOnMap(cords);
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching path data:", err);
+      alert("Failed to load path data.");
+    });
+let farmLayer = null;
+function drawFarmOnMap(coords) {
+
+  if (farmLayer) {
+    map.removeLayer(farmLayer);
+  }
+
+
+  farmLayer = L.polygon(coords, {
+    color: "lime",
+    fillColor: "green",
+    fillOpacity: 0.3
+  }).addTo(map);
+
+
+  map.fitBounds(farmLayer.getBounds());
+}
+
+
+
+let map = L.map('map').setView([28.6139, 77.2090], 22);
+
+L.tileLayer(
+  'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 22,
+    attribution: 'Google'
+  }
+).addTo(map);
+const polyline = L.polyline([], {
+  color: '#00ffff',
+  weight: 4
+}).addTo(map);
+
+let points = [];
+let markers = [];
+let polygon = L.polygon([], { color: 'blue' }).addTo(map);
+
+
+function goBack() {
+  window.location.href = "/farm";
+}
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    isOPerationRunning = true;
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    isRunning = false;
+
+  }
+})
+.catch(err => console.error(err));
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+
+</script>
+
+</body>
+</html>

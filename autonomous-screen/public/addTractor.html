@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Add Tractor</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.container {
+  padding: 30px;
+}
+
+.form {
+  display: flex;
+  gap: 40px;
+}
+
+.upload-box {
+  width: 250px;
+  height: 200px;
+  border: 2px dashed #555;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+input {
+  width: 300px;
+  padding: 10px;
+  margin-bottom: 15px;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: white;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.save {
+  background: #00cfd1;
+}
+
+.cancel {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+
+
+.topbar {
+  padding: 15px;
+  background: #111;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.form-row label {
+  width: 140px;  
+  font-size: 14px;
+}
+
+.form-row input {
+  flex: 1;
+  padding: 8px;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: white;
+}
+
+.upload-box {
+  width: 250px;
+  height: 200px;
+  border: 2px dashed #555;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-box span {
+  color: #aaa;
+}
+
+#goBackButton {
+  all: unset;
+}
+
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-row label {
+    width: 100%;
+  }
+
+  .form-row input {
+    width: 100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Add Tractor</span>
+
+    <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+
+<div class="container">
+  <h2>Add your Tractor’s Information</h2>
+
+  <form id="tractorForm" class="form">
+
+ 
+    <div>
+      <div class="upload-box" onclick="document.getElementById('file').click()">
+        <img id="preview" style="display:none; width:100%; height:100%; object-fit:contain;" />
+        <span id="uploadText">Upload Image</span>
+        </div>
+      <input type="file" id="file" name="image" hidden>
+    </div>
+
+
+    <div>
+      <div class="form-row">
+        <label for="name">Vehicle Name:</label>
+        <input type="text" name="name" id="name" placeholder="Vehicle Name" required>
+        </div>
+
+        <div class="form-row">
+        <label for="turning_radius">Turning Radius:</label>
+          <input
+            type="number"
+            name="turning_radius"
+            id="turning_radius"
+            placeholder="Turning Radius"
+            step="0.01"
+            required
+          >
+        </div>
+
+        <div class="form-row">
+        <label for="width">Width:</label>
+          <input
+            type="number"
+            name="width"
+            id="width"
+            placeholder="Width"
+            step="0.01"
+            required
+          >
+        </div>
+
+        <div class="form-row">
+        <label for="wheel_base">Wheel Base:</label>
+          <input
+            type="number"
+            name="wheel_base"
+            id="wheel_base"
+            placeholder="Wheel Base"
+            step="0.01"
+            required
+          >
+        </div>
+
+        <div class="form-row">
+        <label for="other">Other Data:</label>
+        <input type="text" name="other" id="other" placeholder="Other">
+        </div>
+    <button type="button" class="btn cancel" onclick="goBack()">Cancel</button>
+      <button type="submit" class="btn save">Save</button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+document.getElementById('tractorForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+
+  fetch('/api/tractor', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    // alert("Saved!");
+    window.location.href = "/tractor";
+  })
+  .catch(err => console.error(err));
+});
+
+function goBack() {
+  window.location.href = "/tractor";
+}
+const fileInput = document.getElementById('file');
+const preview = document.getElementById('preview');
+const uploadText = document.getElementById('uploadText');
+
+fileInput.addEventListener('change', function () {
+  const file = this.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+      uploadText.style.display = "none";
+    };
+
+    reader.readAsDataURL(file);
+  }
+});
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    isOPerationRunning = true;
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    isRunning = false;
+
+  }
+})
+.catch(err => console.error(err));
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generate Path</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.topbar {
+  padding: 12px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+}
+
+
+.container {
+  display: flex;
+  gap: 10px;
+  height: calc(98vh - 50px);
+  padding: 10px;
+}
+
+.map-box {
+  flex: 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.panel {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+input {
+  padding: 10px;
+  background: #1f1f1f;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 5px;
+}
+
+.btn {
+  padding: 12px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #00cfd1;
+  color: black;
+}
+
+.custom-select {
+  background: #1f1f1f;
+  border: 1px solid #00cfd1;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #00cfd1;
+  border-radius: 5px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 999;
+}
+
+.dropdown div {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown div:hover {
+  background: #00cfd1;
+  color: black;
+}
+
+#goBackButton {
+  all: unset;
+}
+
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+@media(max-width: 700px){
+  .container {
+    flex-direction: column;
+  }
+}
+
+/* Alert Popup */
+
+.custom-alert {
+  display: none;
+
+  position: fixed;
+  z-index: 5000;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.7);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.alert-box {
+  width: 90%;
+  max-width: 380px;
+
+  background: white;
+  color: #222;
+
+  border-radius: 14px;
+
+  padding: 30px 25px;
+
+  text-align: center;
+
+  animation: popupAnim 0.25s ease;
+}
+
+@keyframes popupAnim {
+
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+
+.alert-icon {
+  width: 70px;
+  height: 70px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 50%;
+
+  background: #00cfd1;
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 34px;
+  font-weight: bold;
+}
+
+#alertTitle {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+#alertMessage {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.alert-btn {
+  border: none;
+
+  background: #00cfd1;
+  color: white;
+
+  padding: 12px 30px;
+
+  border-radius: 6px;
+
+  font-size: 16px;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.alert-btn:hover {
+  background: #00b5b7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Add Path</span>
+    <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+
+  <div class="panel">
+
+    <div>
+      <label>Farm Name :</label>
+      <div class="custom-select" onclick="toggleDropdown('farmDropdown')">
+        <span id="farmSelected">Select Farm</span>
+        <div class="dropdown" id="farmDropdown"></div>
+      </div>
+    </div>
+
+    <div>
+      <label>Tractor Name :</label>
+      <div class="custom-select" onclick="toggleDropdown('tractorDropdown')">
+        <span id="tractorSelected">Select Tractor</span>
+        <div class="dropdown" id="tractorDropdown"></div>
+      </div>
+    </div>
+
+    <div>
+      <label>Implement :</label>
+      <div class="custom-select" onclick="toggleDropdown('implementDropdown')">
+        <span id="implementSelected">Select Implement</span>
+        <div class="dropdown" id="implementDropdown"></div>
+      </div>
+    </div>
+
+    <button class="btn primary" onclick="generatePath()">Generate</button>
+   <input type="text" id="pathName" placeholder="Path Name">
+  <button class="btn primary" onclick="save()">Save</button>
+  <button class="btn primary" onclick="clearMap()">Discard</button>
+
+  </div>
+
+</div>
+
+<!-- Custom Alert -->
+<div class="custom-alert" id="alertPopup">
+
+  <div class="alert-box">
+
+    <div class="alert-icon">
+      !
+    </div>
+
+    <h2 id="alertTitle">Alert</h2>
+
+    <p id="alertMessage">
+      Message here
+    </p>
+
+    <button class="alert-btn" onclick="closeAlert()">
+      OK
+    </button>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+  function showAlert(title, message) {
+
+  document.getElementById("alertTitle").innerText = title;
+
+  document.getElementById("alertMessage").innerText = message;
+
+  document.getElementById("alertPopup").style.display = "flex";
+
+}
+
+function closeAlert() {
+
+  document.getElementById("alertPopup").style.display = "none";
+
+}
+
+let map = L.map('map').setView([28.6139, 77.2090], 15);
+
+L.tileLayer(
+  'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 22,
+    attribution: 'Google'
+  }
+).addTo(map);
+let points = [];
+let markers = [];
+let polygon = L.polygon([], { color: 'blue' }).addTo(map);
+let generatedPath = [];
+let polyline = null;
+let hpolyline=null;
+
+function clearMap() {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  points = [];
+  polyline.setLatLngs([]);
+      if(hpolyline){
+         map.removeLayer(hpolyline);
+    }
+}
+
+
+function toggleDropdown(id) {
+  document.querySelectorAll('.dropdown').forEach(d => {
+    if (d.id !== id) d.style.display = 'none';
+  });
+
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+window.addEventListener('click', function(e) {
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.dropdown').forEach(d => {
+      d.style.display = 'none';
+    });
+  }
+});
+
+let farmData = [];
+let tractorData = [];
+let implementData = [];
+
+let selectedFarm = null;
+let selectedTractor = null;
+let selectedImplement = null;
+
+fetch('./data/farm.json')
+  .then(res => res.json())
+  .then(data => {
+    farmData = data;
+    const dropdown = document.getElementById("farmDropdown");
+
+    data.forEach(v => {
+      const item = document.createElement("div");
+      item.textContent = v.farmName;
+
+      item.onclick = function(e) {
+        e.stopPropagation();
+
+        selectedFarm = v;
+        document.getElementById("farmSelected").innerText = v.farmName;
+
+        dropdown.style.display = "none";
+
+        if (v.coordinates) {
+          drawFarmOnMap(v.coordinates);
+        } else {
+          console.warn("No coordinates found for farm:", v);
+        }
+      };
+
+      dropdown.appendChild(item);
+    });
+  });
+
+  let farmLayer = null;
+
+function drawFarmOnMap(coords) {
+  if (farmLayer) {
+    map.removeLayer(farmLayer);
+  }
+
+  farmLayer = L.polygon(coords, {
+    color: "lime",
+    fillColor: "green",
+    fillOpacity: 0.3
+  }).addTo(map);
+
+  map.fitBounds(farmLayer.getBounds());
+}
+
+fetch('./data/tractor.json')
+  .then(res => res.json())
+  .then(data => {
+    const dropdown = document.getElementById("tractorDropdown");
+
+    data.forEach(v => {
+      const item = document.createElement("div");
+      item.textContent = v.tractor_name;
+
+      item.onclick = function(e) {
+        e.stopPropagation();
+        document.getElementById("tractorSelected").innerText = v.tractor_name;
+        selectedTractor = v;
+        dropdown.style.display = "none";
+      };
+
+      dropdown.appendChild(item);
+    });
+  });
+
+
+fetch('./data/implement.json')
+  .then(res => res.json())
+  .then(data => {
+    const dropdown = document.getElementById("implementDropdown");
+
+    data.forEach(i => {
+      const item = document.createElement("div");
+      item.textContent = i.implement_name;
+
+      item.onclick = function(e) {
+        selectedImplement = i;
+        e.stopPropagation();
+        document.getElementById("implementSelected").innerText = i.implement_name;
+        dropdown.style.display = "none";
+      };
+
+      dropdown.appendChild(item);
+    });
+  });
+
+  async function generatePath() {
+  if (!selectedFarm || !selectedTractor || !selectedImplement) {
+    showAlert(
+  "Selection Required",
+  "Please select farm, tractor and implement."
+);
+    return;
+  }
+
+  const data = {
+    farm: selectedFarm,
+    tractor: selectedTractor,
+    implement: selectedImplement
+  };
+    // console.log(farmData,tractorData,implementData);
+    console.log("Data to send:", data);
+  try{
+    const res = await fetch("/api/generatePath", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify(data)
+        });
+    console.log("Response status:", res.body);
+    const result = await res?.json();
+    console.log("Res:", result);
+    generatedPath = result?.path?.tp;
+    const marker = result?.path?.tp?.[0];
+    const tractorIcon = L.icon({
+    iconUrl: './image/blue.svg',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+
+  let vehicleMarker = L.marker(marker, {
+    icon: tractorIcon
+  }).addTo(map);
+
+    if(polyline){
+         map.removeLayer(polyline);
+    }
+    polyline = L.polyline(generatedPath, {color:"red"}).addTo(map);
+    
+    generatedHeadland = result?.path?.headland;
+    if(hpolyline){
+         map.removeLayer(hpolyline);
+    }
+    generatedHeadland = result?.path?.headland;
+    hpolyline = L.polyline(generatedHeadland, {color:"yellow"}).addTo(map);
+    
+    // alert("Path generated successfully!");
+  }
+  catch(err){
+    console.error("Error generating path:", err);
+    showAlert(
+      "Generation Failed",
+      "Failed to generate path."
+    );
+  }
+}
+
+function save() {
+  const farmName = selectedFarm?.farmName || document.getElementById("farmSelected").innerText;
+  const pathName = document.getElementById("pathName").value.trim();
+  const tractorName = selectedTractor?.tractor_name || document.getElementById("tractorSelected").innerText;
+  const implementName = selectedImplement?.implement_name || document.getElementById("implementSelected").innerText;
+
+
+if(!farmName || farmName === "Select Farm" || !pathName || !tractorName || tractorName === "Select Tractor" || !implementName || implementName === "Select Implement" || !generatedPath || generatedPath.length === 0) {
+   showAlert(
+  "Missing Information",
+  "Please fill all fields before saving."
+);
+    return;
+  }
+  console.log("Sending Data:", { farmName, pathName, tractorName, implementName, coordinates: generatedPath });
+
+  fetch('/api/savePath', {
+    method: 'POST',
+    body: JSON.stringify({
+      farmName: farmName,
+      pathName: pathName,
+      tractorName: tractorName,
+      implementName: implementName,
+      coordinates: generatedPath
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+  .then(res => {
+    console.log("Response:", res);
+    if(res.status !== 200) {
+      showAlert(
+  "Duplicate Path Name",
+  "Path name already exists. Please choose a different name."
+);
+    }
+    else{
+      // alert("Saved!");
+      setTimeout(() => {
+        window.location.href = "/path";
+      }, 500);
+    }
+  })
+  .catch(err => {
+    console.error("ERROR:", err);
+  });
+}
+
+function goBack() {
+  window.location.href = "/path";
+}
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    isOPerationRunning = true;
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    isRunning = false;
+
+  }
+})
+.catch(err => console.error(err));
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard UI</title>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+
+  body {
+    background: #2c2c2c;
+    height: 100vh;
+  }
+
+  .app{
+    width: 100%;
+    height: 100vh;
+    background: #1f1f1f;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app2{
+    width: 100%;
+    height: 100vh;
+    background: #1f1f1f;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #111;
+    color: #fff;
+    font-size: 16px;
+  }
+
+
+  .card {
+    flex: 1;
+    padding: 20px;
+    background: #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .card h2 {
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 22px;
+  }
+
+ 
+  .grid {
+    width: 100%;
+    max-width: 1000px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+  }
+
+
+  .btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border: 2px solid #00e5ff;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+    min-height: 120px;
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    border: 2px solid #00e5ff;
+    transform: translateY(-5px);
+  }
+
+
+  .icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+    object-fit: contain;
+  }
+
+
+  .btn span {
+    font-size: 16px;
+    text-align: center;
+  }
+
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .btn {
+      min-height: 100px;
+      padding: 15px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+  </div>
+
+
+    <div class="card">
+     <div style="position: relative; width: 216px;">
+        <img src="/image/logo.png" alt="Logo"
+            style="width: 216px; height: auto; clip-path: inset(0 0 20px 0);">
+
+        <p style="
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            margin: 0;
+            color: white;
+            width: 100%;
+            text-align: center;
+            font-size: 17px;
+            font-weight: bold;
+            ">
+            Escorts Kubota Limited
+        </p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+<script>
+  setTimeout(() => {
+    window.location.href = "/dashboard";
+  }, 2000); 
+</script>
+</html>

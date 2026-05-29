@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Implement</title>
+
+<style>
+
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #1f1f1f;
+  color: white;
+}
+
+.container {
+  padding: 30px;
+}
+
+.form {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.topbar {
+  padding: 15px;
+  background: #111;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+  position: relative;
+}
+
+.form-row label {
+  width: 140px;
+  font-size: 14px;
+}
+
+.form-row input {
+  flex: 1;
+  padding: 10px;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 5px;
+}
+
+.form-row input:focus {
+  outline: none;
+  border-color: #00cfd1;
+}
+
+
+
+.upload-box {
+  width: 250px;
+  height: 200px;
+  border: 2px dashed #555;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.upload-box span {
+  color: #aaa;
+}
+
+
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.save {
+  background: #00cfd1;
+  color: black;
+}
+
+.cancel {
+  background: transparent;
+  border: 1px solid #00cfd1;
+  color: white;
+}
+
+
+
+.custom-select {
+  flex: 1;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #00cfd1;
+  border-radius: 5px;
+  overflow: hidden;
+  z-index: 999;
+}
+
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #00cfd1;
+  color: black;
+}
+
+
+#goBackButton {
+  all: unset;
+}
+
+
+    .gnss-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.status-dot.green {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.status-dot.red {
+  background: red;
+  box-shadow: 0 0 10px red;
+}
+
+.icon{
+  height: 30px;
+}
+
+.status-container{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+@media (max-width: 600px) {
+
+  .form {
+    flex-direction: column;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-row label {
+    width: 100%;
+  }
+
+  .form-row input,
+  .custom-select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .upload-box {
+    width: 100%;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button id="goBackButton" style="padding-bottom: 3px; width: 20px;" onclick="goBack()">❮</button>
+  <span style="font-weight: bold; font-size: 22px;">Add Implement</span>
+    <div class="status-container">
+
+    <div class="gnss-status">
+      <div id="gnssDot" class="status-dot red"></div>
+      <img src="./image/gps.png" alt="GNSS Status" class="icon">
+    </div>
+
+    <div class="gnss-status">
+      <div id="operationDot" class="status-dot red"></div>
+      <img src="./image/operational-system.png" alt="Operation Status" class="icon">
+    </div>
+
+  </div>
+</div>
+
+<div class="container">
+
+  <h2>Add your Implement’s Information</h2>
+
+  <form id="implementForm" class="form">
+
+ 
+
+    <div>
+
+      <div class="upload-box" onclick="document.getElementById('file').click()">
+
+        <img 
+          id="preview"
+          style="display:none; width:100%; height:100%; object-fit:contain;"
+        >
+
+        <span id="uploadText">Upload Image</span>
+
+      </div>
+
+      <input type="file" id="file" name="image" hidden>
+
+    </div>
+
+
+
+
+    <div>
+
+  
+
+      <div class="form-row">
+
+        <label>Implement Name:</label>
+
+        <input
+          type="text"
+          name="name"
+          id="name"
+          placeholder="Implement Name"
+          required
+        >
+
+      </div>
+
+
+
+
+      <div class="form-row">
+
+        <label>Select Implement:</label>
+
+        <div class="custom-select" onclick="toggleDropdown('implementDropdown')">
+
+          <span id="implementSelected">Select Implement</span>
+
+          <div class="dropdown" id="implementDropdown">
+
+            <div class="dropdown-item"
+              onclick="selectItem(event, 'Rotavator')">
+              Rotavator
+            </div>
+
+            <div class="dropdown-item"
+              onclick="selectItem(event, 'Cultivator')">
+              Cultivator
+            </div>
+
+            <div class="dropdown-item"
+              onclick="selectItem(event, 'Plough')">
+              Plough
+            </div>
+
+            <div class="dropdown-item"
+              onclick="selectItem(event, 'Harrow')">
+              Harrow
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+  
+      <div class="form-row">
+
+        <label>Width:</label>
+
+        <input
+          type="number"
+          name="width"
+          id="width"
+          placeholder="Width"
+          step="0.01"
+          required
+        >
+
+      </div>
+
+
+
+
+      <div class="form-row">
+
+        <label>Other Data:</label>
+
+        <input
+          type="text"
+          name="other"
+          id="other"
+          placeholder="Other"
+        >
+
+      </div>
+
+
+
+      <button
+        type="button"
+        class="btn cancel"
+        onclick="goBack()"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="submit"
+        class="btn save"
+      >
+        Save
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+
+
+
+let selectedImplementType = "";
+
+
+
+
+document.getElementById('implementForm')
+.addEventListener('submit', function (e) {
+
+  e.preventDefault();
+
+  if (!selectedImplementType) {
+    // alert("Please select implement type");
+    return;
+  }
+
+  const formData = new FormData(this);
+
+
+  formData.append("implement_type", selectedImplementType);
+
+  fetch('/api/implement', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    // alert("Saved Successfully!");
+
+    window.location.href = "/implement";
+
+    console.log(data);
+
+  })
+  .catch(err => console.error(err));
+
+});
+
+
+
+
+function toggleDropdown(id) {
+
+  const dropdown = document.getElementById(id);
+
+  dropdown.style.display =
+    dropdown.style.display === 'block'
+      ? 'none'
+      : 'block';
+
+}
+
+
+
+function selectItem(event, value) {
+
+  event.stopPropagation();
+
+
+  document.getElementById('implementSelected').innerText = value;
+
+
+  selectedImplementType = value;
+
+
+  document.getElementById('implementDropdown').style.display = 'none';
+
+}
+
+
+
+
+window.addEventListener('click', function (e) {
+
+  const dropdown = document.getElementById('implementDropdown');
+
+  const select = document.querySelector('.custom-select');
+
+  if (!select.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+
+});
+
+
+
+
+function goBack() {
+
+  window.location.href = "/implement";
+
+}
+
+
+
+
+const fileInput = document.getElementById('file');
+
+const preview = document.getElementById('preview');
+
+const uploadText = document.getElementById('uploadText');
+
+fileInput.addEventListener('change', function () {
+
+  const file = this.files[0];
+
+  if (file) {
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+
+      preview.src = e.target.result;
+
+      preview.style.display = "block";
+
+      uploadText.style.display = "none";
+
+    };
+
+    reader.readAsDataURL(file);
+
+  }
+
+});
+
+
+let isRunning = false;
+let isOPerationRunning = false;
+let gnssStatus = false
+
+function updateGNSSStatus(status) {
+  const dot = document.getElementById("gnssDot");
+  const text = document.getElementById("gnssText");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+function updateOperationStatus(status) {
+  const dot = document.getElementById("operationDot");
+
+  if (status) {
+    dot.classList.remove("red");
+    dot.classList.add("green");
+  } else {
+    dot.classList.remove("green");
+    dot.classList.add("red");
+  }
+}
+
+fetch('/api/check-status')
+.then(res => res.json())
+.then(data => {
+  if (data.operationStatus === true) {
+    isOPerationRunning = true;
+    updateOperationStatus(true);
+  } else {
+    updateOperationStatus(false);
+  }
+  if (data.cProcessStatus){
+    gnssStatus = true
+    updateGNSSStatus(true);
+  }
+  if(data.cProcessStatus===false){
+    console.log(gnssStatus)
+    gnssStatus=false;
+    updateGNSSStatus(false);
+    isRunning = false;
+
+  }
+})
+.catch(err => console.error(err));
+
+  updateGNSSStatus(false);
+updateOperationStatus(false);
+
+</script>
+
+</body>
+</html>
